@@ -22,6 +22,9 @@
 // with scaled profits to our algorithm and multiply the result with K,
 // reversing the scaling.
 //
+// The computed solution is correct within of factor of (1 - eps) of the best
+// solution.
+//
 // Complexity:
 // Time - O(n + n * maxProfit / K), where K = eps * biggestProfit / n, so the time
 // complexity becomes O(n + maxProfit / (eps * biggestProfit))
