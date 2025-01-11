@@ -74,6 +74,5 @@ long long BruteForce(vector<Object>& objects) {
 
 int main(int argc, char** argv) {
 	vector<Object> objects = ReadData(argv[1]);
-	BruteForce(objects);
-	return 0;
+	return BruteForce(objects);
 }

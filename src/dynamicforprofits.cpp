@@ -93,6 +93,5 @@ long long DynamicForProfits(vector<Object>& objects) {
 
 int main(int argc, char** argv) {
 	vector<Object> objects = ReadData(argv[1]);
-	long long bruteForce = DynamicForProfits(objects);
-	return 0;
+	return DynamicForProfits(objects);
 }

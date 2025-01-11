@@ -71,6 +71,5 @@ long long DynamicForWeights(vector<Object>& objects) {
 
 int main(int argc, char** argv) {
 	vector<Object> objects = ReadData(argv[1]);
-	DynamicForWeights(objects);
-	return 0;
+	return DynamicForWeights(objects);
 }

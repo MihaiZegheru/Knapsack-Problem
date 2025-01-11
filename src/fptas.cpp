@@ -62,14 +62,28 @@ vector<Object> ReadData(char* fileName) {
 	return objects;
 }
 
-long long DynamicForWeights(vector<Object>& objects) {
- 	vector<long long> dp(maxWeight + 5, 0);
+long long DynamicForProfits(vector<Object>& objects) {
+	long long maxProfitSum = 0;
 	for (long long i = 0; i < objects.size(); i++) {
-		for (long long j = maxWeight; j >= objects[i].weight; j--) {
-			dp[j] = max(dp[j], dp[j - objects[i].weight] + objects[i].profit);
+		maxProfitSum = max(maxProfitSum, maxProfitSum + objects[i].profit);
+	}
+ 	vector<long long> dp(maxProfitSum + 5, INT64_MAX - maxWeight);
+	dp[0] = 0;
+
+ 	long long profitSum = 0;
+	for (long long i = 0; i < objects.size(); i++) {
+		profitSum += objects[i].profit;
+		for (long long j = profitSum; j >= objects[i].profit; j--) {
+			dp[j] = min(dp[j], dp[j - objects[i].profit] + objects[i].weight);
 		}
 	}
-	return dp[maxWeight];
+
+	for (long long ans = profitSum; ans >= 0; ans--) {
+		if (dp[ans] <= maxWeight) {
+			return ans;
+		}
+	}
+	return 0;
 }
 
 long long FPTAS(vector<Object>& objects, double eps) {
@@ -84,11 +98,10 @@ long long FPTAS(vector<Object>& objects, double eps) {
 			objects[i].weight,
 			(long long)(objects[i].profit / scalingFactor)};
 	}
-	return (double)DynamicForWeights(scaledObjects) * scalingFactor;
+	return (double)DynamicForProfits(scaledObjects) * scalingFactor;
 }
 
 int main(int argc, char** argv) {
 	vector<Object> objects = ReadData(argv[1]);
-	FPTAS(objects, 0.5);
-	return 0;
+	return FPTAS(objects, 0.5);
 }
