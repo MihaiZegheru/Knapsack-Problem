@@ -33,15 +33,17 @@ struct Object {
     long long profit;
 };
 
-int maxWeight;
+int N, G;
+long long bestAns;
+vector<int> bestChoice;
 
 vector<Object> ReadData(char* fileName) {
 	ifstream fin(fileName);
 
-	int n;
-  fin >> n >> maxWeight;
-	vector<Object> objects(n);
-  for (int i = 0; i < n; i++) {
+  fin >> N >> G
+;
+	vector<Object> objects(N + 1);
+  for (int i = 1; i <= N; i++) {
     fin >> objects[i].weight;
     fin >> objects[i].profit;
   }
@@ -50,9 +52,16 @@ vector<Object> ReadData(char* fileName) {
 	return objects;
 }
 
-long long RecursiveBruteForce(vector<Object>& objects, Object aggregate,
-		long long index) {
+long long RecursiveBruteForce(int n, int g, vector<Object>& objects, Object aggregate,
+		long long index, vector<int>& out, vector<int>& current) {
 	if (index >= objects.size()) {
+		if (aggregate.profit > bestAns) {
+			bestAns = aggregate.profit;
+			out.resize(current.size());
+			for (int i = 0; i < current.size(); i++) {
+				out[i] = current[i];
+			}
+		}
 		return aggregate.profit;
 	}
 
@@ -61,18 +70,29 @@ long long RecursiveBruteForce(vector<Object>& objects, Object aggregate,
 		aggregate.profit + objects[index].profit
 	};
 
-	long long profit = INT64_MIN;
-	if (newAggregate.weight <= maxWeight) {
-		profit = RecursiveBruteForce(objects, newAggregate, index + 1);
+	long long profit;
+	long long forAdded = INT64_MIN;;
+	long long forIgnored = RecursiveBruteForce(n, g, objects, aggregate, index + 1, out, current);
+	if (newAggregate.weight <= G) {
+		current.push_back(index);
+		forAdded = RecursiveBruteForce(n, g, objects, newAggregate, index + 1, out, current);
+		current.pop_back();
 	}
-	return max(profit, RecursiveBruteForce(objects, aggregate, index + 1));
+	if (forAdded > forIgnored) {
+		profit = forAdded;
+	} else {
+		profit = forIgnored;
+	}
+	return profit;
 }
 
-long long BruteForce(vector<Object>& objects) {
-	return RecursiveBruteForce(objects, {0, 0}, 0);
+long long BruteForce(int n, int g, vector<Object>& objects, vector<int>& out) {
+	vector<int> current;
+	return RecursiveBruteForce(n, g, objects, {0, 0}, 0, out, current);
 }
 
 int main(int argc, char** argv) {
 	vector<Object> objects = ReadData(argv[1]);
-	return BruteForce(objects);
+	vector<int> items;
+	return BruteForce(N, G, objects, items);
 }

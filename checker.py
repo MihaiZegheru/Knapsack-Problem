@@ -24,28 +24,28 @@ for test_num in range(1, 21):
 	# Brute Force
 	command = [f"{BUILD_DIR}{BRUTEFORCE_EXE} ", test_file]
 	start_time = time.time()
-	subprocess.run(command, stdout=open(result_file, "w"))
+	subprocess.run(command)
 	bruteforce_time = time.time() - start_time
 	print(f"Brute force ran in {bruteforce_time * 1000}ms.")
 
 	# Dynamic for weights
 	command = [f"{BUILD_DIR}{DYNAMICFORWEIGHTS_EXE} ", test_file]
 	start_time = time.time()
-	subprocess.run(command, stdout=open(result_file, "w"))
+	subprocess.run(command)
 	dynamicforweights_time = time.time() - start_time
 	print(f"Dynamic for weights ran in {dynamicforweights_time * 1000}ms.")
 	
 	# Dynamic for profits
 	command = [f"{BUILD_DIR}{DYNAMICFORPROFITS_EXE} ", test_file]
 	start_time = time.time()
-	subprocess.run(command, stdout=open(result_file, "w"))
+	subprocess.run(command)
 	dynamicforprofits_time = time.time() - start_time
 	print(f"Dynamic for profits ran in {dynamicforprofits_time * 1000}ms.")
 
 	# Fully polynomial time approximation schem
-	command = [f"{BUILD_DIR}{FPTAS_EXE} ", test_file]
+	command = [f"{BUILD_DIR}{FPTAS_EXE}", test_file, "0.5"]
 	start_time = time.time()
-	subprocess.run(command, stdout=open(result_file, "w"))
+	subprocess.run(command)
 	fptas_time = time.time() - start_time
 	print(f"FPTAS ran in {fptas_time * 1000}ms.")
 

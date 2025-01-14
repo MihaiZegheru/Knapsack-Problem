@@ -41,6 +41,7 @@
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <stdlib.h>
 using namespace std;
 
 struct Object {
@@ -48,15 +49,14 @@ struct Object {
     long long profit;
 };
 
-int maxWeight;
+int N, G;
 
 vector<Object> ReadData(char* fileName) {
 	ifstream fin(fileName);
 
-	int n;
-  fin >> n >> maxWeight;
-	vector<Object> objects(n);
-  for (int i = 0; i < n; i++) {
+  fin >> N >> G;
+	vector<Object> objects(N + 1);
+  for (int i = 1; i <= N; i++) {
     fin >> objects[i].weight;
     fin >> objects[i].profit;
   }
@@ -65,46 +65,60 @@ vector<Object> ReadData(char* fileName) {
 	return objects;
 }
 
-long long DynamicForProfits(vector<Object>& objects) {
+long long DynamicForProfits(int n, int g, vector<Object>& objects, vector<int>& out) {
 	long long maxProfitSum = 0;
 	for (long long i = 0; i < objects.size(); i++) {
 		maxProfitSum = max(maxProfitSum, maxProfitSum + objects[i].profit);
 	}
- 	vector<long long> dp(maxProfitSum + 5, INT64_MAX - maxWeight);
-	dp[0] = 0;
+ 	vector<vector<long long>> dp(n + 1, vector<long long>(maxProfitSum + 1, INT64_MAX - g));
+	dp[0][0] = 0;
 
- 	long long profitSum = 0;
-	for (long long i = 0; i < objects.size(); i++) {
-		profitSum += objects[i].profit;
-		for (long long j = profitSum; j >= objects[i].profit; j--) {
-			dp[j] = min(dp[j], dp[j - objects[i].profit] + objects[i].weight);
+	for (long long i = 1; i <= n; ++i) {
+		for (long long j = 0; j <= maxProfitSum; ++j) {
+			dp[i][j] = dp[i - 1][j];
+			if (j < objects[i].profit) {
+				continue;
+			}
+			dp[i][j] = min(dp[i][j], dp[i - 1][j - objects[i].profit] + objects[i].weight);
 		}
 	}
 
-	for (long long ans = profitSum; ans >= 0; ans--) {
-		if (dp[ans] <= maxWeight) {
-			return ans;
+	long long ans;
+	for (ans = maxProfitSum; ans >= 0; --ans) {
+		if (dp[n][ans] <= G) {
+			break;
 		}
 	}
-	return 0;
+
+	// Build solution
+	long long searchAns = ans;
+	for (long long i = n; i >= 1; --i) {
+		if (dp[i][searchAns] == dp[i - 1][searchAns]) {
+			continue;
+		}
+		out.push_back(i - 1);
+		searchAns -= objects[i].profit;
+	}
+	return ans;
 }
 
-long long FPTAS(vector<Object>& objects, double eps) {
+long long FPTAS(int n, int g, vector<Object>& objects, double eps, vector<int>& out) {
 	long long maxProfit = 0;
-	for (int i = 0; i < objects.size(); i++) {
+	for (int i = 1; i < objects.size(); i++) {
 		maxProfit = max(maxProfit, objects[i].profit);
 	}
 	double scalingFactor = eps * maxProfit / objects.size();
 	vector<Object> scaledObjects(objects.size());
-	for (int i = 0; i < objects.size(); i++) {
+	for (int i = 1; i < objects.size(); i++) {
 		scaledObjects[i] = {
 			objects[i].weight,
 			(long long)(objects[i].profit / scalingFactor)};
 	}
-	return (double)DynamicForProfits(scaledObjects) * scalingFactor;
+	return (double)DynamicForProfits(n, g, scaledObjects, out) * scalingFactor;
 }
 
 int main(int argc, char** argv) {
 	vector<Object> objects = ReadData(argv[1]);
-	return FPTAS(objects, 0.5);
+	vector<int> items;
+	return FPTAS(N, G, objects, atof(argv[2]), items);
 }

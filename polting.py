@@ -1,5 +1,6 @@
 import math
 import os
+import random
 import subprocess
 import time
 from scipy.interpolate import interp1d
@@ -38,6 +39,21 @@ def generate(num_tests, input_range, weight_range, value_range):
 				weight_start += weight_step
 				value_start += value_step
 
+def generate_random(num_tests, input_range, capacity_range, weight_range, value_range):
+		for i in range(1, num_tests + 1):
+			with open(f"{TEST_DIR}{TEST_FILE}_{i}.in", "w") as f:
+				num_items = random.randint(*input_range)
+				capacity = random.randint(*capacity_range)
+
+				# Write the number of items and knapsack capacity
+				f.write(f"{num_items} {capacity}\n")
+
+				# Generate items
+				for _ in range(num_items):
+						weight = random.randint(*weight_range)
+						value = random.randint(*value_range)
+						f.write(f"{weight} {value}\n")
+
 def test(num_tests):
 	brute_times = []
 	weight_times = []
@@ -73,7 +89,7 @@ def test(num_tests):
 		print(f"Dynamic for profits ran in {dynamicforprofits_time * 1000}ms.")
 
 		# Fully polynomial time approximation schem
-		command = [f"{BUILD_DIR}{FPTAS_EXE} ", test_file]
+		command = [f"{BUILD_DIR}{FPTAS_EXE} ", test_file, "0.5"]
 		start_time = time.time()
 		fptas_ans = subprocess.run(command).returncode
 		fptas_time = time.time() - start_time
@@ -82,6 +98,36 @@ def test(num_tests):
 
 		print()
 	return brute_times, weight_times, value_times, fptas_times
+
+def test_errors(num_tests, eps_range=(0.5,0)):
+	error = []
+	eps_start, eps_step = eps_range
+	for test_num in range(1, num_tests + 1):
+		test_file = os.path.join(TEST_DIR, f"{TEST_FILE}_{test_num}.in")
+		eps_start += eps_step
+		
+		print(f"Test: {test_num}")
+		# Dynamic for profits
+		command = [f"{BUILD_DIR}{DYNAMICFORPROFITS_EXE} ", test_file]
+		start_time = time.time()
+		profits_ans = subprocess.run(command).returncode
+		dynamicforprofits_time = time.time() - start_time
+		print(f"Dynamic for profits ran in {dynamicforprofits_time * 1000}ms.")
+
+		# Fully polynomial time approximation schem
+		command = [f"{BUILD_DIR}{FPTAS_EXE}", test_file, str(eps_start)]
+		start_time = time.time()
+		fptas_ans = subprocess.run(command).returncode
+		fptas_time = time.time() - start_time
+		print(f"FPTAS ran in {fptas_time * 1000}ms.")
+		error.append(profits_ans - fptas_ans)
+
+		print(profits_ans)
+		print(fptas_ans)
+
+		print()
+	return error
+
 
 def plot(x, y, name):
 	x = np.array(x)
@@ -153,4 +199,16 @@ plt.title("Incresing Value and Weight")
 plt.xlabel("Value and Weight")
 plt.ylabel("Time")
 plt.savefig(f'{PLOTS_DIR}Increasing Value and Weight.png')
+plt.clf()
+
+# Error testing for FPTAS
+num = 10000
+generate_random(num, (1, 100), (1, 100), (1, 100), (1e2, 1e3))
+errors = test_errors(num, (0.0001, 0.0001))
+plot(list(range(1, 1 * num + 1, 1)), errors, "FPTAS Error")
+plt.legend(loc="upper left")
+plt.title("FPTAS Error")
+plt.xlabel("Eps * 1e2")
+plt.ylabel("Error")
+plt.savefig(f'{PLOTS_DIR}FPTAS Error.png')
 plt.clf()
